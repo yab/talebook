@@ -743,11 +743,21 @@ class BookUpload(BaseHandler):
     def get_upload_file(self):
         # for unittest mock
         p = self.request.files["ebook"][0]
+    
         original_filename = self.get_argument("original_filename", None)
         filename = original_filename or p["filename"]
         filename = decode_filename(filename)
+        filename = os.path.basename(filename)
+        filename = re.sub(r"[^A-Za-z0-9._\-()\[\]\u4e00-\u9fff]+", "_", filename)
+        filename = re.sub(r"_+", "_", filename)
+        name, ext = os.path.splitext(filename)
+        filename = f"{name[:100]}{ext[:20]}"
+        if not filename or filename.startswith("."):
+            filename = f"upload_{random.randint(1000,9999)}.bin"
+    
         return (filename, p["body"])
 
+    
     @js
     def post(self):
         from calibre.ebooks.metadata.meta import get_metadata
